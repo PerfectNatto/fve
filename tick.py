@@ -1,38 +1,55 @@
-import json
-from openpyxl import load_workbook
+import { useState } from 'react';
+import Switch from '@mui/material/Switch';
 
-EXCEL_PATH = "input.xlsx"
-JSON_PATH = "existing.json"
-OUTPUT_PATH = "output.json"
+export default function CustomSwitch() {
+  const [checked, setChecked] = useState(false);
 
-wb = load_workbook(EXCEL_PATH, data_only=True)
-ws = wb.active
+  const handleToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const nextChecked = event.target.checked;
 
-with open(JSON_PATH, "r", encoding="utf-8-sig") as f:
-    data = json.load(f)
+    setChecked(nextChecked);
 
-index = {p["name"]: p for p in data["palettes"]}
+    // ここにtoggle時に実行したい処理を書く
+    console.log('toggle:', nextChecked);
+  };
 
-blocks = {
-    "melody": ("H", "I", "J", "K"),
-    "chord":  ("N", "O", "P", "Q"),
-    "bass":   ("T", "U", "V", "W"),
-    "drums":  ("Z", "AA", "AB", "AC"),
+  return (
+    <Switch
+      checked={checked}
+      onChange={handleToggle}
+      disableRipple
+      sx={{
+        width: 72,
+        height: 44,
+        padding: 0,
+
+        '& .MuiSwitch-switchBase': {
+          padding: '6px',
+          transitionDuration: '200ms',
+
+          '&.Mui-checked': {
+            transform: 'translateX(28px)',
+            color: '#fff',
+
+            '& + .MuiSwitch-track': {
+              backgroundColor: '#7c3aed', // checked時の色
+              opacity: 1,
+            },
+          },
+        },
+
+        '& .MuiSwitch-thumb': {
+          width: 32,
+          height: 32,
+          boxShadow: '0 3px 10px rgba(0, 0, 0, 0.25)',
+        },
+
+        '& .MuiSwitch-track': {
+          borderRadius: 44 / 2,
+          backgroundColor: '#d1d5db', // 後ろのグレー
+          opacity: 1,
+        },
+      }}
+    />
+  );
 }
-
-for row in range(4, ws.max_row + 1):
-    palette = index.get(ws[f"C{row}"].value)
-
-    if not palette:
-        continue
-
-    for part, cols in blocks.items():
-        name_col, cc0_col, cc32_col, pg_col = cols
-
-        palette["instrument"][part]["name"] = ws[f"{name_col}{row}"].value
-        palette["instrument"][part]["cc0"] = int(ws[f"{cc0_col}{row}"].value)
-        palette["instrument"][part]["cc32"] = int(ws[f"{cc32_col}{row}"].value)
-        palette["instrument"][part]["pg"] = int(ws[f"{pg_col}{row}"].value)
-
-with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
-    json.dump(data, f, ensure_ascii=False, indent=2)
